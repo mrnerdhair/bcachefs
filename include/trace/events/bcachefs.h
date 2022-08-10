@@ -1148,10 +1148,34 @@ TRACE_EVENT(btree_path_alloc,
 		TRACE_BPOS_assign(pos, path->pos);
 	),
 
-	TP_printk("  idx %u btree %s locks_want %u pos %llu:%llu:%u",
+	TP_printk("idx %2u btree %s locks_want %u pos %llu:%llu:%u",
 		  __entry->idx,
 		  bch2_btree_ids[__entry->btree_id],
 		  __entry->locks_want,
+		  __entry->pos_inode,
+		  __entry->pos_offset,
+		  __entry->pos_snapshot)
+);
+
+TRACE_EVENT(btree_path_should_be_locked,
+	TP_PROTO(struct btree_path *path),
+	TP_ARGS(path),
+
+	TP_STRUCT__entry(
+		__field(u8,			idx		)
+		__field(u8,			btree_id	)
+		TRACE_BPOS_entries(pos)
+	),
+
+	TP_fast_assign(
+		__entry->idx			= path->idx;
+		__entry->btree_id		= path->btree_id;
+		TRACE_BPOS_assign(pos, path->pos);
+	),
+
+	TP_printk("idx %2u btree %s %llu:%llu:%u",
+		  __entry->idx,
+		  bch2_btree_ids[__entry->btree_id],
 		  __entry->pos_inode,
 		  __entry->pos_offset,
 		  __entry->pos_snapshot)
