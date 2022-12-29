@@ -96,12 +96,18 @@ with open('{}/{}'.format(prev_abidir, flavor)) as fh:
 print('read {} symbols.'.format(old_count))
 
 print('II: Checking for ABI changes...')
+removed = 0
 changed_loc = 0
 changed_type = 0
 error = False
 for sym, vals in symbols.items():
     # Ignore new symbols
     if 'old' not in vals or 'loc' not in vals:
+        continue
+
+    if 'loc' not in vals:
+        removed += 1
+        print('    REMOVED : {:40} : {}'.format(sym, vals['old']['loc']))
         continue
 
     # Changes in location don't hurt us, but log it anyway
@@ -121,6 +127,9 @@ for sym, vals in symbols.items():
             error = True
         print('    TYPE : {:40} : {} => {}{}'.format(sym, vals['old']['type'],
                                                      vals['type'], ignored))
+
+if removed > 0:
+    print('II: {} symbols removed'.format(removed))
 
 if changed_loc > 0:
     print('II: {} symbols changed location'.format(changed_loc))
