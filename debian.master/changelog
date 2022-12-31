@@ -1,3 +1,11 @@
+linux (6.1.0-bcachefs20230209+g5fc458d0+noalloctag-14.14) lunar; urgency=medium
+
+  * bcachefs master 5fc458d0
+
+  * kmalloc slab allocation tagging (74e885cb and 32170846) reverted (breaks ZFS)
+
+ -- Reid Rankin <reidrankin@gmail.com>  Mon, 10 Feb 2023 00:07:10 -0500
+
 linux (6.1.0-14.14) lunar; urgency=medium
 
   * lunar/linux: 6.1.0-14.14 -proposed tracker (LP: #2003939)
