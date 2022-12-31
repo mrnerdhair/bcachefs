@@ -1,4 +1,8 @@
-linux (6.1.0-12.12) lunar; urgency=medium
+linux (6.1.0+bcachefs.g630ba749+g130f209f-12.12) lunar; urgency=medium
+
+  * cherry-pick 130f209f "bcachefs: Add max nr of IOs in flight to the move path"
+
+  * bcachefs master 630ba749
 
   * lunar/linux: 6.1.0-12.12 -proposed tracker (LP: #2002096)
 
