@@ -1,4 +1,6 @@
-linux (6.1.0-12.12) lunar; urgency=medium
+linux (6.1.0+bcachefs.git20230107.44aba345-12.12) lunar; urgency=medium
+
+  * bcachefs master 44aba345
 
   * lunar/linux: 6.1.0-12.12 -proposed tracker (LP: #2002096)
 
