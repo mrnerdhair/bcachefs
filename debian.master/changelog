@@ -1,3 +1,9 @@
+linux (6.3.0-bcachefs20230603+ga4643fd6-6.6) mantic; urgency=medium
+
+  * bcachefs master a4643fd6
+
+ -- Reid Rankin <reidrankin@gmail.com>  Mon, 10 Feb 2023 00:07:10 -0500
+
 linux (6.3.0-6.6) mantic; urgency=medium
 
   * mantic/linux: 6.3.0-6.6 -proposed tracker (LP: #2022324)
