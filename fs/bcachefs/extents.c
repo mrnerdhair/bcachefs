@@ -692,7 +692,7 @@ unsigned bch2_bkey_durability(struct bch_fs *c, struct bkey_s_c k)
 	unsigned durability = 0;
 
 	bkey_for_each_ptr_decode(k.k, ptrs, p, entry)
-		durability += bch2_extent_ptr_durability(c,& p);
+		durability += bch2_extent_ptr_durability(c, &p);
 
 	return durability;
 }
