@@ -1,4 +1,6 @@
-linux (6.1.0+bcachefs.g630ba749+g130f209f-12.12) lunar; urgency=medium
+linux (6.1.0+bcachefs.g630ba749+g130f209f+norebalance-12.12) lunar; urgency=medium
+
+  * norebalance
 
   * cherry-pick 130f209f "bcachefs: Add max nr of IOs in flight to the move path"
 
