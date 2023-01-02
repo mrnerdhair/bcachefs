@@ -409,7 +409,12 @@ enum opt_type {
 	  OPT_UINT(0, BCH_REPLICAS_MAX),				\
 	  BCH2_NO_SB_OPT,		1,				\
 	  "n",		"Data written to this device will be considered\n"\
-			"to have already been replicated n times")
+			"to have already been replicated n times")	\
+	x(norebalance,			u8,				\
+	  OPT_FS|OPT_MOUNT|OPT_RUNTIME,						\
+	  OPT_BOOL(),							\
+	  BCH2_NO_SB_OPT,		false,				\
+	  NULL,		"Don't start the rebalance thread")
 
 struct bch_opts {
 #define x(_name, _bits, ...)	unsigned _name##_defined:1;
