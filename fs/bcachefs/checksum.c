@@ -490,7 +490,7 @@ static int __bch2_request_key(char *key_description, struct bch_key *key)
 	key_serial_t key_id;
 
 	key_id = request_key("user", key_description, NULL,
-			     KEY_SPEC_USER_KEYRING);
+			     KEY_SPEC_PROCESS_KEYRING);
 	if (key_id < 0)
 		return -errno;
 
