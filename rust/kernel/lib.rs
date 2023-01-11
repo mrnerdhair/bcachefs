@@ -26,6 +26,7 @@ pub mod error;
 pub mod mean_and_variance;
 pub mod prelude;
 pub mod print;
+pub mod six;
 pub mod str;
 
 #[doc(hidden)]

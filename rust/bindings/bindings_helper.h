@@ -7,6 +7,7 @@
  */
 
 #include <linux/mean_and_variance.h>
+#include <linux/six.h>
 #include <linux/slab.h>
 
 /* `bindgen` gets confused at certain things. */
