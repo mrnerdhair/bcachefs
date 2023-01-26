@@ -511,7 +511,8 @@ static int __bch2_move_data(struct moving_context *ctxt,
 			if (bch2_err_matches(ret2, BCH_ERR_transaction_restart))
 				continue;
 
-			if (ret2 == -ENOMEM) {
+			if (ret2 == -ENOMEM ||
+			    ret2 == -BCH_ERR_nocow_lock_blocked) {
 				/* memory allocation failure, wait for some IO to finish */
 				bch2_move_ctxt_wait_for_io(ctxt, &trans);
 				continue;

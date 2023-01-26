@@ -465,7 +465,7 @@ int bch2_data_update_init(struct btree_trans *trans,
 		if (p.crc.compression_type == BCH_COMPRESSION_TYPE_incompressible)
 			m->op.incompressible = true;
 
-		if (ctxt) {
+		if (0) {
 			move_ctxt_wait_event(ctxt, trans,
 					(locked = bch2_bucket_nocow_trylock(&c->nocow_locks,
 								  PTR_BUCKET_POS(c, &p.ptr), 0)) ||
