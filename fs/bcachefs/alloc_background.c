@@ -37,8 +37,6 @@ static const unsigned BCH_ALLOC_V1_FIELD_BYTES[] = {
 
 struct bkey_alloc_unpacked {
 	u64		journal_seq;
-	u64		bucket;
-	u8		dev;
 	u8		gen;
 	u8		oldest_gen;
 	u8		data_type;
@@ -194,11 +192,7 @@ static int bch2_alloc_unpack_v3(struct bkey_alloc_unpacked *out,
 
 static struct bkey_alloc_unpacked bch2_alloc_unpack(struct bkey_s_c k)
 {
-	struct bkey_alloc_unpacked ret = {
-		.dev	= k.k->p.inode,
-		.bucket	= k.k->p.offset,
-		.gen	= 0,
-	};
+	struct bkey_alloc_unpacked ret = { .gen	= 0 };
 
 	switch (k.k->type) {
 	case KEY_TYPE_alloc:
@@ -212,48 +206,6 @@ static struct bkey_alloc_unpacked bch2_alloc_unpack(struct bkey_s_c k)
 		break;
 	}
 
-	return ret;
-}
-
-void bch2_alloc_to_v4(struct bkey_s_c k, struct bch_alloc_v4 *out)
-{
-	if (k.k->type == KEY_TYPE_alloc_v4) {
-		*out = *bkey_s_c_to_alloc_v4(k).v;
-	} else {
-		struct bkey_alloc_unpacked u = bch2_alloc_unpack(k);
-
-		*out = (struct bch_alloc_v4) {
-			.journal_seq		= u.journal_seq,
-			.flags			= u.need_discard,
-			.gen			= u.gen,
-			.oldest_gen		= u.oldest_gen,
-			.data_type		= u.data_type,
-			.stripe_redundancy	= u.stripe_redundancy,
-			.dirty_sectors		= u.dirty_sectors,
-			.cached_sectors		= u.cached_sectors,
-			.io_time[READ]		= u.read_time,
-			.io_time[WRITE]		= u.write_time,
-			.stripe			= u.stripe,
-		};
-	}
-}
-
-struct bkey_i_alloc_v4 *bch2_alloc_to_v4_mut(struct btree_trans *trans, struct bkey_s_c k)
-{
-	struct bkey_i_alloc_v4 *ret;
-
-	if (k.k->type == KEY_TYPE_alloc_v4) {
-		ret = bch2_trans_kmalloc(trans, bkey_bytes(k.k));
-		if (!IS_ERR(ret))
-			bkey_reassemble(&ret->k_i, k);
-	} else {
-		ret = bch2_trans_kmalloc(trans, sizeof(*ret));
-		if (!IS_ERR(ret)) {
-			bkey_alloc_v4_init(&ret->k_i);
-			ret->k.p = k.k->p;
-			bch2_alloc_to_v4(k, &ret->v);
-		}
-	}
 	return ret;
 }
 
@@ -417,21 +369,83 @@ void bch2_alloc_v4_swab(struct bkey_s k)
 
 void bch2_alloc_to_text(struct printbuf *out, struct bch_fs *c, struct bkey_s_c k)
 {
-	struct bch_alloc_v4 a;
+	struct bch_alloc_v4 _a;
+	const struct bch_alloc_v4 *a = &_a;
 
-	bch2_alloc_to_v4(k, &a);
+	if (k.k->type == KEY_TYPE_alloc_v4)
+		a = bkey_s_c_to_alloc_v4(k).v;
+	else
+		bch2_alloc_to_v4(k, &_a);
 
-	prt_printf(out, "gen %u oldest_gen %u data_type %s journal_seq %llu need_discard %llu need_inc_gen %llu",
-	       a.gen, a.oldest_gen, bch2_data_types[a.data_type],
-	       a.journal_seq,
-	       BCH_ALLOC_V4_NEED_DISCARD(&a),
-	       BCH_ALLOC_V4_NEED_INC_GEN(&a));
-	prt_printf(out, " dirty_sectors %u",	a.dirty_sectors);
-	prt_printf(out, " cached_sectors %u",	a.cached_sectors);
-	prt_printf(out, " stripe %u",		a.stripe);
-	prt_printf(out, " stripe_redundancy %u",	a.stripe_redundancy);
-	prt_printf(out, " read_time %llu",		a.io_time[READ]);
-	prt_printf(out, " write_time %llu",		a.io_time[WRITE]);
+	prt_newline(out);
+	printbuf_indent_add(out, 2);
+
+	prt_printf(out, "gen %u oldest_gen %u data_type %s",
+	       a->gen, a->oldest_gen, bch2_data_types[a->data_type]);
+	prt_newline(out);
+	prt_printf(out, "journal_seq       %llu",	a->journal_seq);
+	prt_newline(out);
+	prt_printf(out, "need_discard      %llu",	BCH_ALLOC_V4_NEED_DISCARD(a));
+	prt_newline(out);
+	prt_printf(out, "need_inc_gen      %llu",	BCH_ALLOC_V4_NEED_INC_GEN(a));
+	prt_newline(out);
+	prt_printf(out, "dirty_sectors     %u",	a->dirty_sectors);
+	prt_newline(out);
+	prt_printf(out, "cached_sectors    %u",	a->cached_sectors);
+	prt_newline(out);
+	prt_printf(out, "stripe            %u",	a->stripe);
+	prt_newline(out);
+	prt_printf(out, "stripe_redundancy %u",	a->stripe_redundancy);
+	prt_newline(out);
+	prt_printf(out, "io_time[READ]     %llu",	a->io_time[READ]);
+	prt_newline(out);
+	prt_printf(out, "io_time[WRITE]    %llu",	a->io_time[WRITE]);
+	prt_newline(out);
+	prt_printf(out, "backpointers:     %llu",	BCH_ALLOC_V4_NR_BACKPOINTERS(a));
+
+	printbuf_indent_sub(out, 2);
+}
+
+void bch2_alloc_to_v4(struct bkey_s_c k, struct bch_alloc_v4 *out)
+{
+	if (k.k->type == KEY_TYPE_alloc_v4) {
+		*out = *bkey_s_c_to_alloc_v4(k).v;
+	} else {
+		struct bkey_alloc_unpacked u = bch2_alloc_unpack(k);
+
+		*out = (struct bch_alloc_v4) {
+			.journal_seq		= u.journal_seq,
+			.flags			= u.need_discard,
+			.gen			= u.gen,
+			.oldest_gen		= u.oldest_gen,
+			.data_type		= u.data_type,
+			.stripe_redundancy	= u.stripe_redundancy,
+			.dirty_sectors		= u.dirty_sectors,
+			.cached_sectors		= u.cached_sectors,
+			.io_time[READ]		= u.read_time,
+			.io_time[WRITE]		= u.write_time,
+			.stripe			= u.stripe,
+		};
+	}
+}
+
+struct bkey_i_alloc_v4 *bch2_alloc_to_v4_mut(struct btree_trans *trans, struct bkey_s_c k)
+{
+	struct bkey_i_alloc_v4 *ret;
+
+	if (k.k->type == KEY_TYPE_alloc_v4) {
+		ret = bch2_trans_kmalloc(trans, bkey_bytes(k.k));
+		if (!IS_ERR(ret))
+			bkey_reassemble(&ret->k_i, k);
+	} else {
+		ret = bch2_trans_kmalloc(trans, sizeof(*ret));
+		if (!IS_ERR(ret)) {
+			bkey_alloc_v4_init(&ret->k_i);
+			ret->k.p = k.k->p;
+			bch2_alloc_to_v4(k, &ret->v);
+		}
+	}
+	return ret;
 }
 
 int bch2_alloc_read(struct bch_fs *c)
