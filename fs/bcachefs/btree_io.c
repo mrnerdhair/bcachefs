@@ -631,8 +631,6 @@ void bch2_btree_node_drop_keys_outside_node(struct btree *b)
 	struct bkey unpacked;
 	struct btree_node_iter iter;
 
-	BUG();
-
 	for_each_bset(b, t) {
 		struct bset *i = bset(b, t);
 		struct bkey_packed *k;
