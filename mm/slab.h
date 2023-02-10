@@ -493,6 +493,9 @@ static inline void free_slab_obj_exts(struct slab *slab)
 {
 	struct slabobj_ext *obj_exts;
 
+	if (!memcg_kmem_enabled() && is_kmem_only_obj_ext())
+		return;
+
 	obj_exts = slab_obj_exts(slab);
 	/*
 	 * obj_exts was created with __GFP_NO_OBJ_EXT flag, therefore its
@@ -501,8 +504,7 @@ static inline void free_slab_obj_exts(struct slab *slab)
 	 * NULL, therefore replace NULL with CODETAG_EMPTY to indicate that
 	 * the extension for obj_exts is expected to be NULL.
 	 */
-	if (obj_exts)
-		mark_objexts_empty(obj_exts);
+	mark_objexts_empty(obj_exts);
 	kfree(obj_exts);
 	slab->obj_exts = 0;
 }
@@ -512,6 +514,10 @@ static inline struct slabobj_ext *prepare_slab_obj_exts_hook(struct kmem_cache *
 	struct slab *slab;
 
 	if (!p)
+		return NULL;
+
+	/* If kmem is the only extension then the vector will be created conditionally */
+	if (is_kmem_only_obj_ext())
 		return NULL;
 
 	if (s->flags & SLAB_NO_OBJ_EXT)
