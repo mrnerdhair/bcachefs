@@ -163,7 +163,7 @@ static int bch2_xattr_get_trans(struct btree_trans *trans, struct bch_inode_info
 err2:
 	bch2_trans_iter_exit(trans, &iter);
 err1:
-	return ret == -ENOENT ? -ENODATA : ret;
+	return bch2_err_matches(ret, ENOENT) ? -ENODATA : ret;
 }
 
 int bch2_xattr_get(struct bch_fs *c, struct bch_inode_info *inode,
@@ -229,7 +229,7 @@ int bch2_xattr_set(struct btree_trans *trans, subvol_inum inum,
 				       hash_info, inum, &search);
 	}
 
-	if (ret == -ENOENT)
+	if (bch2_err_matches(ret, ENOENT))
 		ret = flags & XATTR_REPLACE ? -ENODATA : 0;
 
 	return ret;
