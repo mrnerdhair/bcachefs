@@ -1344,14 +1344,39 @@ static int need_whiteout_for_snapshot(struct btree_trans *trans,
 	return ret;
 }
 
+static int pos_overwritten_in_snapshot(struct btree_trans *trans, enum btree_id btree,
+				       struct bpos pos, u32 snapshot)
+{
+	struct bch_fs *c = trans->c;
+	struct btree_iter iter;
+	struct bkey_s_c k;
+	int ret;
+
+	for_each_btree_key_norestart(trans, iter,
+			btree, SPOS(pos.inode, pos.offset, snapshot),
+			BTREE_ITER_ALL_SNAPSHOTS|
+			BTREE_ITER_NOPRESERVE, k, ret) {
+		if (bpos_ge(k.k->p, pos))
+			break;
+
+		if (bch2_snapshot_is_ancestor(c, k.k->p.snapshot, pos.snapshot)) {
+			ret = 1;
+			break;
+		}
+	}
+	bch2_trans_iter_exit(trans, &iter);
+
+	return ret;
+}
+
 int __bch2_insert_snapshot_whiteouts(struct btree_trans *trans,
-				   enum btree_id id,
+				   enum btree_id btree,
 				   struct bpos old_pos,
 				   struct bpos new_pos)
 {
 	struct bch_fs *c = trans->c;
 	struct btree_iter old_iter, new_iter;
-	struct bkey_s_c old_k, new_k;
+	struct bkey_s_c k;
 	snapshot_id_list s;
 	struct bkey_i *update;
 	int ret;
@@ -1361,27 +1386,29 @@ int __bch2_insert_snapshot_whiteouts(struct btree_trans *trans,
 
 	darray_init(&s);
 
-	bch2_trans_iter_init(trans, &old_iter, id, old_pos,
+	bch2_trans_iter_init(trans, &old_iter, btree, old_pos,
 			     BTREE_ITER_NOT_EXTENTS|
 			     BTREE_ITER_ALL_SNAPSHOTS);
-	while ((old_k = bch2_btree_iter_prev(&old_iter)).k &&
-	       !(ret = bkey_err(old_k)) &&
-	       bkey_eq(old_pos, old_k.k->p)) {
-		struct bpos whiteout_pos =
-			SPOS(new_pos.inode, new_pos.offset, old_k.k->p.snapshot);;
+	while ((k = bch2_btree_iter_prev(&old_iter)).k &&
+	       !(ret = bkey_err(k)) &&
+	       bkey_eq(old_pos, k.k->p)) {
 
-		if (!bch2_snapshot_is_ancestor(c, old_k.k->p.snapshot, old_pos.snapshot) ||
-		    snapshot_list_has_ancestor(c, &s, old_k.k->p.snapshot))
+		if (!bch2_snapshot_is_ancestor(c, k.k->p.snapshot, old_pos.snapshot) ||
+		    snapshot_list_has_ancestor(c, &s, k.k->p.snapshot))
 			continue;
 
-		new_k = bch2_bkey_get_iter(trans, &new_iter, id, whiteout_pos,
-					   BTREE_ITER_NOT_EXTENTS|
-					   BTREE_ITER_INTENT);
-		ret = bkey_err(new_k);
-		if (ret)
+		ret = pos_overwritten_in_snapshot(trans, btree,
+					new_pos, k.k->p.snapshot);
+		if (ret < 0)
 			break;
 
-		if (new_k.k->type == KEY_TYPE_deleted) {
+		if (!ret) {
+			struct bpos whiteout_pos =
+				SPOS(new_pos.inode, new_pos.offset, k.k->p.snapshot);;
+
+			bch2_trans_iter_init(trans, &new_iter, btree, whiteout_pos,
+					     BTREE_ITER_NOT_EXTENTS|
+					     BTREE_ITER_INTENT);
 			update = bch2_trans_kmalloc(trans, sizeof(struct bkey_i));
 			ret = PTR_ERR_OR_ZERO(update);
 			if (ret)
@@ -1391,12 +1418,13 @@ int __bch2_insert_snapshot_whiteouts(struct btree_trans *trans,
 			update->k.p		= whiteout_pos;
 			update->k.type		= KEY_TYPE_whiteout;
 
-			ret = bch2_trans_update(trans, &new_iter, update,
+			ret   = bch2_btree_iter_traverse(&new_iter) ?:
+				bch2_trans_update(trans, &new_iter, update,
 						BTREE_UPDATE_INTERNAL_SNAPSHOT_NODE);
+			bch2_trans_iter_exit(trans, &new_iter);
 		}
-		bch2_trans_iter_exit(trans, &new_iter);
 
-		ret = snapshot_list_add(c, &s, old_k.k->p.snapshot);
+		ret = snapshot_list_add(c, &s, k.k->p.snapshot);
 		if (ret)
 			break;
 	}
