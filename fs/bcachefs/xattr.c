@@ -163,7 +163,7 @@ static int bch2_xattr_get_trans(struct btree_trans *trans, struct bch_inode_info
 err2:
 	bch2_trans_iter_exit(trans, &iter);
 err1:
-	return bch2_err_matches(ret, ENOENT) ? -ENODATA : ret;
+	return ret < 0 && bch2_err_matches(ret, ENOENT) ? -ENODATA : ret;
 }
 
 int bch2_xattr_get(struct bch_fs *c, struct bch_inode_info *inode,
@@ -589,7 +589,7 @@ err:
 	     opt_id == Opt_background_target))
 		bch2_rebalance_add_work(c, inode->v.i_blocks);
 
-	return ret;
+	return bch2_err_class(ret);
 }
 
 static const struct xattr_handler bch_xattr_bcachefs_handler = {
