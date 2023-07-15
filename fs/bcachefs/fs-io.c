@@ -2396,8 +2396,8 @@ static noinline int bch2_dio_write_copy_iov(struct dio_write *dio)
 		dio->free_iov = true;
 	}
 
-	memcpy(iov, dio->iter.__iov, dio->iter.nr_segs * sizeof(*iov));
-	dio->iter.__iov = iov;
+	memcpy(iov, dio->iter.iov, dio->iter.nr_segs * sizeof(*iov));
+	dio->iter.iov = iov;
 	return 0;
 }
 
@@ -2457,7 +2457,7 @@ static __always_inline long bch2_dio_write_done(struct dio_write *dio)
 	bch2_pagecache_block_put(inode);
 
 	if (dio->free_iov)
-		kfree(dio->iter.__iov);
+		kfree(dio->iter.iov);
 
 	ret = dio->op.error ?: ((long) dio->written << 9);
 	bio_put(&dio->op.wbio.bio);
