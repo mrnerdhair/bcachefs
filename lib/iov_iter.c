@@ -800,37 +800,24 @@ size_t iov_iter_zero(size_t bytes, struct iov_iter *i)
 }
 EXPORT_SYMBOL(iov_iter_zero);
 
-size_t copy_page_from_iter_atomic(struct page *page, unsigned offset,
-		size_t bytes, struct iov_iter *i)
+size_t copy_page_from_iter_atomic(struct page *page, unsigned offset, size_t bytes,
+				  struct iov_iter *i)
 {
-	size_t n, copied = 0;
-
-	if (!page_copy_sane(page, offset, bytes))
+	char *kaddr = kmap_atomic(page), *p = kaddr + offset;
+	if (!page_copy_sane(page, offset, bytes)) {
+		kunmap_atomic(kaddr);
 		return 0;
-	if (WARN_ON_ONCE(!i->data_source))
+	}
+	if (WARN_ON_ONCE(!i->data_source)) {
+		kunmap_atomic(kaddr);
 		return 0;
-
-	do {
-		char *p;
-
-		n = bytes - copied;
-		if (PageHighMem(page)) {
-			page += offset / PAGE_SIZE;
-			offset %= PAGE_SIZE;
-			n = min_t(size_t, n, PAGE_SIZE - offset);
-		}
-
-		p = kmap_atomic(page) + offset;
-		iterate_and_advance(i, n, base, len, off,
-			copyin(p + off, base, len),
-			memcpy(i, p + off, base, len)
-		)
-		kunmap_atomic(p);
-		copied += n;
-		offset += n;
-	} while (PageHighMem(page) && copied != bytes && n > 0);
-
-	return copied;
+	}
+	iterate_and_advance(i, bytes, base, len, off,
+		copyin(p + off, base, len),
+		memcpy(p + off, base, len)
+	)
+	kunmap_atomic(kaddr);
+	return bytes;
 }
 EXPORT_SYMBOL(copy_page_from_iter_atomic);
 
