@@ -1,3 +1,13 @@
+linux (6.4.0-bcachefs20230824+g6a801100+flexarr+ffsck-1.1) mantic; urgency=medium
+
+  * bcachefs master 6a801100 ("bcachefs: Improve bch2_moving_ctxt_to_text()")
+    - Suppress Rust bindgen for codetag_query
+    - Fixup Rust allocator bindings from krealloc to krealloc_noprof
+  * bcachefs: fix UBSAN flexible array bounds errors
+  * bcachefs: add fsck_fast option to skip slow fsck passes
+
+ -- Reid Rankin <reidrankin@gmail.com>  Thu, 24 Aug 2023 15:08:08 -0500
+
 linux (6.4.0-1.1) mantic; urgency=medium
 
   * mantic/linux: 6.4.0-1.1 -proposed tracker (LP: #2028778)
