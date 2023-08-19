@@ -20,3 +20,5 @@
 
 # `seccomp`'s comment gets understood as a doctest
 --no-doc-comments
+
+--opaque-type codetag_query
