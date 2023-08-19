@@ -1,3 +1,9 @@
+linux (6.4.0-bcachefs20230819+gb30cf605-1.1) mantic; urgency=medium
+
+  * bcachefs bcachefs-for-upstream b30cf605
+
+ -- Reid Rankin <reidrankin@gmail.com>  Sat, 19 Aug 2023 17:20:35 -0500
+
 linux (6.4.0-1.1) mantic; urgency=medium
 
   * mantic/linux: 6.4.0-1.1 -proposed tracker (LP: #2028778)
