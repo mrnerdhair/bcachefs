@@ -1,8 +1,9 @@
-linux (6.4.0-bcachefs20230821+g93e12e16-1.1) mantic; urgency=medium
+linux (6.4.0-bcachefs20230821+g93e12e16+bcachefsdbg-1.1) mantic; urgency=medium
 
   * bcachefs master 93e12e16
     - Suppress Rust bindgen for codetag_query
     - Fixup Rust allocator bindings from krealloc to krealloc_noprof
+    - CONFIG_BCACHEFS_DEBUG
 
  -- Reid Rankin <reidrankin@gmail.com>  Mon, 21 Aug 2023 15:52:46 -0500
 
