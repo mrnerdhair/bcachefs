@@ -268,7 +268,7 @@ struct bch_ioctl_fs_usage {
 	__u32			replica_entries_bytes;
 	__u32			pad;
 
-	struct bch_replicas_usage replicas[0];
+	struct bch_replicas_usage replicas[];
 };
 
 /*
