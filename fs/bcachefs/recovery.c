@@ -597,7 +597,7 @@ static bool should_run_recovery_pass(struct bch_fs *c, enum bch_recovery_pass pa
 		return false;
 	if (c->recovery_passes_explicit & BIT_ULL(pass))
 		return true;
-	if ((p->when & PASS_FSCK) && c->opts.fsck)
+	if ((p->when & PASS_FSCK) && c->opts.fsck && !((p->when & PASS_FSCK_FAST_SKIPS) && c->opts.fsck_fast))
 		return true;
 	if ((p->when & PASS_UNCLEAN) && !c->sb.clean)
 		return true;

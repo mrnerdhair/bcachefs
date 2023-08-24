@@ -331,6 +331,11 @@ enum fsck_err_opts {
 	  OPT_UINT(1, 1024),						\
 	  BCH2_NO_SB_OPT,		32,				\
 	  NULL,		"Maximum number of IOs to keep in flight by the move path")\
+	x(fsck_fast,			u8,				\
+	  OPT_FS|OPT_MOUNT,						\
+	  OPT_BOOL(),							\
+	  BCH2_NO_SB_OPT,		false,				\
+	  NULL,		"Skip slow recovery passes during fsck")	\
 	x(fsck,				u8,				\
 	  OPT_FS|OPT_MOUNT,						\
 	  OPT_BOOL(),							\

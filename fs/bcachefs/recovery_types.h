@@ -6,6 +6,7 @@
 #define PASS_FSCK		BIT(1)
 #define PASS_UNCLEAN		BIT(2)
 #define PASS_ALWAYS		BIT(3)
+#define PASS_FSCK_FAST_SKIPS	BIT(3)
 
 #define BCH_RECOVERY_PASSES()									\
 	x(alloc_read,			PASS_ALWAYS)						\
@@ -13,14 +14,14 @@
 	x(initialize_subvolumes,	0)							\
 	x(snapshots_read,		PASS_ALWAYS)						\
 	x(check_topology,		0)							\
-	x(check_allocations,		PASS_FSCK)						\
+	x(check_allocations,		PASS_FSCK|PASS_FSCK_FAST_SKIPS)				\
 	x(set_may_go_rw,		PASS_ALWAYS|PASS_SILENT)				\
 	x(journal_replay,		PASS_ALWAYS)						\
 	x(check_alloc_info,		PASS_FSCK)						\
 	x(check_lrus,			PASS_FSCK)						\
-	x(check_btree_backpointers,	PASS_FSCK)						\
-	x(check_backpointers_to_extents,PASS_FSCK)						\
-	x(check_extents_to_backpointers,PASS_FSCK)						\
+	x(check_btree_backpointers,	PASS_FSCK|PASS_FSCK_FAST_SKIPS)				\
+	x(check_backpointers_to_extents,PASS_FSCK|PASS_FSCK_FAST_SKIPS)				\
+	x(check_extents_to_backpointers,PASS_FSCK|PASS_FSCK_FAST_SKIPS)				\
 	x(check_alloc_to_lru_refs,	PASS_FSCK)						\
 	x(fs_freespace_init,		PASS_ALWAYS|PASS_SILENT)				\
 	x(bucket_gens_init,		0)							\
